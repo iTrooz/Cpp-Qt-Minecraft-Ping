@@ -56,7 +56,6 @@ private:
     void pingWithDomainA() {
         QHostInfo::lookupHost(QString::fromStdString(domain), this, [&](const QHostInfo &hostInfo){
             if (hostInfo.error() != QHostInfo::NoError) {
-                pingWithDomainSRV();
                 emitFail("A record lookup failed");
                 return;
             } else {
