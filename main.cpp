@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
         McClient client(nullptr, QString::fromStdString(domain), ip, port);
         int online = client.getOnlinePlayers();
         printf("Online players: %d\n", online);
+        client.close();
     });
     resolver.ping();
 
