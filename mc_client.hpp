@@ -63,9 +63,9 @@ private:
         }
     }
 
-    // write number with specified size
+    // write number with specified size in big endian format
     void writeFixedInt(QByteArray &data, int value, int size) {
-        for (int i = 0; i < size; i++) {
+        for (int i = size - 1; i >= 0; i--) {
             data.append((value >> (i * 8)) & 0xFF);
         }
     }
