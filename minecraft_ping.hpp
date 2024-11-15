@@ -1,6 +1,8 @@
 #include <QObject>
 #include <QDnsLookup>
 #include <QtNetwork/qtcpsocket.h>
+#include <QCoreApplication>
+#include <QApplication>
 
 class MinecraftPing : public QObject {
     Q_OBJECT
@@ -20,18 +22,22 @@ public:
 private:
 
     void pingWithDomainA() {
-        QDnsLookup lookup;
-        lookup.setName(QString::fromStdString(domain));
-        lookup.setType(QDnsLookup::A);
+        QDnsLookup *lookup = new QDnsLookup(this);
+        lookup->setName(QString::fromStdString(domain));
+        lookup->setType(QDnsLookup::A);
 
-        connect(&lookup, &QDnsLookup::finished, this, [&]() {
-            if (lookup.error() != QDnsLookup::NoError) {
-                printf("Warning: A record lookup failed (%v), trying SRV record lookup\n", lookup.errorString().toStdString());
+        connect(lookup, &QDnsLookup::finished, this, [&]() {
+            QDnsLookup *lookup = qobject_cast<QDnsLookup *>(sender());
+
+            lookup->deleteLater();
+
+            if (lookup->error() != QDnsLookup::NoError) {
+                printf("Warning: A record lookup failed (%v), trying SRV record lookup\n", lookup->errorString().toStdString());
                 pingWithDomainSRV();
                 return;
             }
 
-            auto records = lookup.hostAddressRecords();
+            auto records = lookup->hostAddressRecords();
             if (records.isEmpty()) {
                 printf("Warning: no A entries found for domain, trying SRV record lookup\n");
                 pingWithDomainSRV();
@@ -43,7 +49,7 @@ private:
             pingWithIP(firstRecord.value().toString(), this->port);
         });
 
-        lookup.lookup();
+        lookup->lookup();
     }
 
     void pingWithDomainSRV() {
