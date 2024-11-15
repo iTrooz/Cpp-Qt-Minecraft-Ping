@@ -84,6 +84,8 @@ private:
     }
 
     void pingWithIP(QString ip, int port) {
+        printf("Found IP %s, port %d\n", ip.toStdString().c_str(), port);
+
         QTcpSocket socket;
         socket.connectToHost(ip, port);
         if (!socket.waitForConnected(5000)) {
