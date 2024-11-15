@@ -12,12 +12,17 @@
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
 
-    if (argc != 3) {
-        printf ("Usage: %s <domain> <port>\n", argv[0]);
+    if (argc < 2) {
+        printf ("Usage: %s <domain> [port]\n", argv[0]);
         return 1;
     }
     std::string domain = argv[1];
-    int port = std::stoi(argv[2]);
+
+
+    int port = 25565;
+    if (argc >= 3) {
+        port = std::stoi(argv[2]);
+    }
 
     MCResolver resolver(nullptr, domain, port);
     QObject::connect(&resolver, &MCResolver::succeed, [&](QString ip, int port) {
