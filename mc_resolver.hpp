@@ -60,7 +60,6 @@ private:
                 emitFail("A record lookup failed");
                 return;
             } else {
-                qDebug() << "Resolved Addresses for" << hostInfo.hostName() << ":";
                 auto records = hostInfo.addresses();
                 if (records.isEmpty()) {
                     emitFail("No A entries found for domain");

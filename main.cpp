@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
 
     MCResolver resolver(nullptr, domain, port);
     QObject::connect(&resolver, &MCResolver::succeed, [&](QString ip, int port) {
+        qDebug() << "Resolved Addresse for" << domain << ": " << ip << ":" << port;
         McClient client(nullptr, QString::fromStdString(domain), ip, port);
     });
     resolver.ping();
