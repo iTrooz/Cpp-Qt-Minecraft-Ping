@@ -1,8 +1,6 @@
 #include <QObject>
 #include <QDnsLookup>
 #include <QtNetwork/qtcpsocket.h>
-#include <QCoreApplication>
-#include <QApplication>
 #include <QHostInfo>
 
 // resolve the IP and port of a Minecraft server
