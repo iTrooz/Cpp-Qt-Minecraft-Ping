@@ -4,12 +4,12 @@
 
 #include <QObject>
 #include <QtNetwork/QDnsLookup>
-#include <QApplication>
+#include <QCoreApplication>
 
 #include <minecraft_ping.hpp>
 
 int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
+    QCoreApplication app(argc, argv);
 
     MinecraftPing ping(nullptr, "example.com", 25565);
     QObject::connect(&ping, &MinecraftPing::succeed, [&](){
