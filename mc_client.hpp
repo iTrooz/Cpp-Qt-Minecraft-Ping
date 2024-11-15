@@ -59,10 +59,7 @@ public:
         auto resp = socket.readAll();
         int length = readVarInt(resp);
         if (length != resp.size()) {
-            throw std::runtime_error(
-                QString("Packet length doesn't match actual packet size (%1 expected vs %2 received)")
-                .arg(length).arg(resp.size()).toStdString()
-            );
+            printf("Warning: Packet length doesn't match actual packet size (%d expected vs %d received)\n", length, resp.size());
         }
 
         int packetID = readVarInt(resp);
