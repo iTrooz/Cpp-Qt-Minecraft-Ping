@@ -55,12 +55,30 @@ public:
         writePacketToSocket(data); // send status packet
     }
 
+    void readBytesExactFromSocket(QByteArray &resp, int bytesToRead) {
+        while (bytesToRead > 0) {
+            qDebug() << bytesToRead << " bytes left to read";
+            if (!socket.waitForReadyRead()) {
+                throw std::runtime_error("Read timeout or error");
+            }
+
+            QByteArray chunk = socket.read(qMin(bytesToRead, socket.bytesAvailable()));
+            resp.append(chunk);
+            bytesToRead -= chunk.size();
+        }
+    }
+
     QJsonObject readResponse() {
         auto resp = socket.readAll();
         int length = readVarInt(resp);
+
+        // finish ready response
+        readBytesExactFromSocket(resp, length-resp.size());
+
         if (length != resp.size()) {
             printf("Warning: Packet length doesn't match actual packet size (%d expected vs %d received)\n", length, resp.size());
         }
+        qDebug() << "Received response successfully";
 
         int packetID = readVarInt(resp);
         if (packetID != 0x00) {
