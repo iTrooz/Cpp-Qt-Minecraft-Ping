@@ -23,7 +23,7 @@ private:
 
     void pingWithDomainSRV() {
         QDnsLookup *lookup = new QDnsLookup(this);
-        lookup->setName(QString::fromStdString(domain));
+        lookup->setName(QString("_minecraft._tcp.%1").arg(QString::fromStdString(domain)));
         lookup->setType(QDnsLookup::SRV);
 
         connect(lookup, &QDnsLookup::finished, this, [&]() {
