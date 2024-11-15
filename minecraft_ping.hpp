@@ -3,6 +3,7 @@
 #include <QtNetwork/qtcpsocket.h>
 #include <QCoreApplication>
 #include <QApplication>
+#include <QHostInfo>
 
 class MinecraftPing : public QObject {
     Q_OBJECT
@@ -55,31 +56,24 @@ private:
     }
 
     void pingWithDomainA() {
-        QDnsLookup *lookup = new QDnsLookup(this);
-        lookup->setName(QString::fromStdString(domain));
-        lookup->setType(QDnsLookup::A);
-
-        connect(lookup, &QDnsLookup::finished, this, [&]() {
-            QDnsLookup *lookup = qobject_cast<QDnsLookup *>(sender());
-
-            lookup->deleteLater();
-
-            if (lookup->error() != QDnsLookup::NoError) {
+        QHostInfo::lookupHost(QString::fromStdString(domain), this, [&](const QHostInfo &hostInfo){
+            if (hostInfo.error() != QHostInfo::NoError) {
                 pingWithDomainSRV();
                 emitFail("A record lookup failed");
                 return;
+            } else {
+                qDebug() << "Resolved Addresses for" << hostInfo.hostName() << ":";
+                auto records = hostInfo.addresses();
+                if (records.isEmpty()) {
+                    emitFail("No A entries found for domain");
+                    return;
+                }
+                
+                
+                const auto& firstRecord = records.at(0);
+                pingWithIP(firstRecord.toString(), this->port);
             }
-
-            auto records = lookup->hostAddressRecords();
-            if (records.isEmpty()) {
-                emitFail("No A entries found for domain");
-                return;
-            }
-
-
-            const auto& firstRecord = records.at(0);
-            pingWithIP(firstRecord.value().toString(), this->port);
-        });
+        });        
     }
 
     void pingWithIP(QString ip, int port) {
