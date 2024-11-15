@@ -80,27 +80,12 @@ private:
             const auto& firstRecord = records.at(0);
             pingWithIP(firstRecord.value().toString(), this->port);
         });
-
-        lookup->lookup();
     }
 
     void pingWithIP(QString ip, int port) {
         printf("Found IP %s, port %d\n", ip.toStdString().c_str(), port);
 
-        QTcpSocket socket;
-        socket.connectToHost(ip, port);
-        if (!socket.waitForConnected(5000)) {
-            emitFail("");
-            return;
-        }
-
-        socket.write("ping");
-        if (!socket.waitForReadyRead(5000)) {
-            emitFail("");
-            return;
-        }
-
-        auto response = socket.readAll();
+        // TODO
         
         emitSucceed();
     }
