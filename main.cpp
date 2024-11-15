@@ -11,7 +11,7 @@
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
 
-    MinecraftPing ping(nullptr, "example.com", 25565);
+    MinecraftPing ping(nullptr, "hypixel.net", 25565);
     QObject::connect(&ping, &MinecraftPing::succeed, [&](){
         std::cout << "OK !" << std::endl;
     });
