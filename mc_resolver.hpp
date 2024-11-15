@@ -26,7 +26,7 @@ private:
         lookup->setName(QString("_minecraft._tcp.%1").arg(domain));
         lookup->setType(QDnsLookup::SRV);
 
-        connect(lookup, &QDnsLookup::finished, this, [&]() {
+        connect(lookup, &QDnsLookup::finished, this, [&, domain, port]() {
             QDnsLookup *lookup = qobject_cast<QDnsLookup *>(sender());
 
             lookup->deleteLater();
@@ -55,7 +55,7 @@ private:
     }
 
     void pingWithDomainA(QString domain, int port) {
-        QHostInfo::lookupHost(domain, this, [&](const QHostInfo &hostInfo){
+        QHostInfo::lookupHost(domain, this, [&, port](const QHostInfo &hostInfo){
             if (hostInfo.error() != QHostInfo::NoError) {
                 emitFail("A record lookup failed");
                 return;
@@ -65,7 +65,6 @@ private:
                     emitFail("No A entries found for domain");
                     return;
                 }
-                
                 
                 const auto& firstRecord = records.at(0);
                 emitSucceed(firstRecord.toString(), port);
