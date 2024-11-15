@@ -16,41 +16,10 @@ public:
     virtual ~MinecraftPing() {};
 
     void ping() {
-        pingWithDomainA();
+        pingWithDomainSRV();
     }
 
 private:
-
-    void pingWithDomainA() {
-        QDnsLookup *lookup = new QDnsLookup(this);
-        lookup->setName(QString::fromStdString(domain));
-        lookup->setType(QDnsLookup::A);
-
-        connect(lookup, &QDnsLookup::finished, this, [&]() {
-            QDnsLookup *lookup = qobject_cast<QDnsLookup *>(sender());
-
-            lookup->deleteLater();
-
-            if (lookup->error() != QDnsLookup::NoError) {
-                printf("Warning: A record lookup failed (%v), trying SRV record lookup\n", lookup->errorString().toStdString());
-                pingWithDomainSRV();
-                return;
-            }
-
-            auto records = lookup->hostAddressRecords();
-            if (records.isEmpty()) {
-                printf("Warning: no A entries found for domain, trying SRV record lookup\n");
-                pingWithDomainSRV();
-                return;
-            }
-
-
-            const auto& firstRecord = records.at(0);
-            pingWithIP(firstRecord.value().toString(), this->port);
-        });
-
-        lookup->lookup();
-    }
 
     void pingWithDomainSRV() {
         QDnsLookup *lookup = new QDnsLookup(this);
@@ -63,12 +32,14 @@ private:
             lookup->deleteLater();
 
             if (lookup->error() != QDnsLookup::NoError) {
+                printf("Warning: SRV record lookup failed (%v), trying A record lookup\n", lookup->errorString().toStdString());
                 emitFail(lookup->errorString().toStdString());
                 return;
             }
 
             auto records = lookup->serviceRecords();
             if (records.isEmpty()) {
+                printf("Warning: no SRV entries found for domain, trying A record lookup\n");
                 emitFail("No SRV entries found for domain");
                 return;
             }
@@ -78,6 +49,36 @@ private:
             QString ip = firstRecord.target();
             int port = firstRecord.port();
             pingWithIP(ip, port);
+        });
+
+        lookup->lookup();
+    }
+
+    void pingWithDomainA() {
+        QDnsLookup *lookup = new QDnsLookup(this);
+        lookup->setName(QString::fromStdString(domain));
+        lookup->setType(QDnsLookup::A);
+
+        connect(lookup, &QDnsLookup::finished, this, [&]() {
+            QDnsLookup *lookup = qobject_cast<QDnsLookup *>(sender());
+
+            lookup->deleteLater();
+
+            if (lookup->error() != QDnsLookup::NoError) {
+                pingWithDomainSRV();
+                emitFail("A record lookup failed");
+                return;
+            }
+
+            auto records = lookup->hostAddressRecords();
+            if (records.isEmpty()) {
+                emitFail("No A entries found for domain");
+                return;
+            }
+
+
+            const auto& firstRecord = records.at(0);
+            pingWithIP(firstRecord.value().toString(), this->port);
         });
 
         lookup->lookup();
