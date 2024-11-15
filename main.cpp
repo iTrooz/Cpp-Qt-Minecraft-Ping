@@ -11,7 +11,14 @@
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
 
-    MinecraftPing ping(nullptr, "hypixel.net", 25565);
+    if (argc != 3) {
+        printf ("Usage: %s <domain> <port>\n", argv[0]);
+        return 1;
+    }
+    std::string domain = argv[1];
+    int port = std::stoi(argv[2]);
+
+    MinecraftPing ping(nullptr, domain, port);
     QObject::connect(&ping, &MinecraftPing::succeed, [&](){
         std::cout << "OK !" << std::endl;
     });
