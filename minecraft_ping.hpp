@@ -47,9 +47,9 @@ private:
 
 
             const auto& firstRecord = records.at(0);
-            QString ip = firstRecord.target();
+            QString domain = firstRecord.target();
             int port = firstRecord.port();
-            pingWithIP(ip, port);
+            pingWithIP(domain, port);
         });
 
         lookup->lookup();
