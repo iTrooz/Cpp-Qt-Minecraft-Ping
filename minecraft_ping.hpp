@@ -12,9 +12,7 @@ class MinecraftPing : public QObject {
     int port;
 
 public:
-    explicit MinecraftPing(QObject *parent): QObject(parent) {}
     explicit MinecraftPing(QObject *parent, std::string domain, int port): QObject(parent), domain(domain), port(port) {}
-    virtual ~MinecraftPing() {};
 
     void ping() {
         pingWithDomainSRV();
