@@ -8,21 +8,21 @@
 class MinecraftPing : public QObject {
     Q_OBJECT
 
-    std::string domain;
-    int port;
+    std::string constrDomain;
+    int constrPort;
 
 public:
-    explicit MinecraftPing(QObject *parent, std::string domain, int port): QObject(parent), domain(domain), port(port) {}
+    explicit MinecraftPing(QObject *parent, std::string domain, int port): QObject(parent), constrDomain(domain), constrPort(port) {}
 
     void ping() {
-        pingWithDomainSRV();
+        pingWithDomainSRV(QString::fromStdString(constrDomain), constrPort);
     }
 
 private:
 
-    void pingWithDomainSRV() {
+    void pingWithDomainSRV(QString domain, int port) {
         QDnsLookup *lookup = new QDnsLookup(this);
-        lookup->setName(QString("_minecraft._tcp.%1").arg(QString::fromStdString(domain)));
+        lookup->setName(QString("_minecraft._tcp.%1").arg(domain));
         lookup->setType(QDnsLookup::SRV);
 
         connect(lookup, &QDnsLookup::finished, this, [&]() {
@@ -32,14 +32,14 @@ private:
 
             if (lookup->error() != QDnsLookup::NoError) {
                 printf("Warning: SRV record lookup failed (%v), trying A record lookup\n", lookup->errorString().toStdString());
-                pingWithDomainA();
+                pingWithDomainA(domain, port);
                 return;
             }
 
             auto records = lookup->serviceRecords();
             if (records.isEmpty()) {
                 printf("Warning: no SRV entries found for domain, trying A record lookup\n");
-                pingWithDomainA();
+                pingWithDomainA(domain, port);
                 return;
             }
 
@@ -47,14 +47,14 @@ private:
             const auto& firstRecord = records.at(0);
             QString domain = firstRecord.target();
             int port = firstRecord.port();
-            pingWithIP(domain, port);
+            pingWithDomainA(domain, port);
         });
 
         lookup->lookup();
     }
 
-    void pingWithDomainA() {
-        QHostInfo::lookupHost(QString::fromStdString(domain), this, [&](const QHostInfo &hostInfo){
+    void pingWithDomainA(QString domain, int port) {
+        QHostInfo::lookupHost(domain, this, [&](const QHostInfo &hostInfo){
             if (hostInfo.error() != QHostInfo::NoError) {
                 emitFail("A record lookup failed");
                 return;
@@ -68,7 +68,7 @@ private:
                 
                 
                 const auto& firstRecord = records.at(0);
-                pingWithIP(firstRecord.toString(), this->port);
+                pingWithIP(firstRecord.toString(), port);
             }
         });        
     }
