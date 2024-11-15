@@ -81,7 +81,7 @@ private:
         dataWithSize.append(data);
 
         // write it to the socket
-        socket.write(data);
+        socket.write(dataWithSize);
         socket.flush();
     }
 };
