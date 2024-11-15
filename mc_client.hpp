@@ -19,6 +19,7 @@ public:
     explicit McClient(QObject *parent, QString domain, QString ip, short port): QObject(parent), domain(domain), ip(ip), port(port) {}
 
     QJsonObject getStatusData() {
+        qDebug() << "Connecting to socket..";
         socket.connectToHost(ip, port);
 
         if (!socket.waitForConnected(3000)) {
