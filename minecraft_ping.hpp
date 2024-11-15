@@ -34,14 +34,14 @@ private:
 
             if (lookup->error() != QDnsLookup::NoError) {
                 printf("Warning: SRV record lookup failed (%v), trying A record lookup\n", lookup->errorString().toStdString());
-                emitFail(lookup->errorString().toStdString());
+                pingWithDomainA();
                 return;
             }
 
             auto records = lookup->serviceRecords();
             if (records.isEmpty()) {
                 printf("Warning: no SRV entries found for domain, trying A record lookup\n");
-                emitFail("No SRV entries found for domain");
+                pingWithDomainA();
                 return;
             }
 
