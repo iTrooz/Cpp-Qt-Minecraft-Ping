@@ -53,17 +53,21 @@ private:
     }
 
     void pingWithDomainSRV() {
-        QDnsLookup lookup;
-        lookup.setName(QString::fromStdString(domain));
-        lookup.setType(QDnsLookup::SRV);
+        QDnsLookup *lookup = new QDnsLookup(this);
+        lookup->setName(QString::fromStdString(domain));
+        lookup->setType(QDnsLookup::SRV);
 
-        connect(&lookup, &QDnsLookup::finished, this, [&]() {
-            if (lookup.error() != QDnsLookup::NoError) {
-                emitFail(lookup.errorString().toStdString());
+        connect(lookup, &QDnsLookup::finished, this, [&]() {
+            QDnsLookup *lookup = qobject_cast<QDnsLookup *>(sender());
+
+            lookup->deleteLater();
+
+            if (lookup->error() != QDnsLookup::NoError) {
+                emitFail(lookup->errorString().toStdString());
                 return;
             }
 
-            auto records = lookup.serviceRecords();
+            auto records = lookup->serviceRecords();
             if (records.isEmpty()) {
                 emitFail("No SRV entries found for domain");
                 return;
@@ -76,7 +80,7 @@ private:
             pingWithIP(ip, port);
         });
 
-        lookup.lookup();
+        lookup->lookup();
     }
 
     void pingWithIP(QString ip, int port) {
