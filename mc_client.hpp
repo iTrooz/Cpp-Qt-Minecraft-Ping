@@ -12,44 +12,9 @@ class McClient : public QObject {
     QString ip;
     short port;
     QTcpSocket socket;
-    QByteArray data;
 
 public:
     explicit McClient(QObject *parent, QString domain, QString ip, short port): QObject(parent), domain(domain), ip(ip), port(port) {}
-
-    void writeByte(char value) {
-        data.append(value);
-    }
-
-    void writeVarInt(int value) {
-        while (true) {
-            if ((value & ~SEGMENT_BITS) == 0) {
-                writeByte(value);
-                return;
-            }
-
-            writeByte((value & SEGMENT_BITS) | CONTINUE_BIT);
-
-            // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
-            value >>= 7;
-        }
-    }
-
-    void writeShort(short value) {
-        data.append((char) (value >> 8));
-        data.append((char) value);
-    }
-
-    void writeString(std::string value) {
-        data.append(value);
-    }
-
-    void writeToSocket() {
-        socket.write(data);
-        socket.flush();
-        data = QByteArray();
-    }
-
 
     void getOnlinePlayers() {
         socket.connectToHost(ip, port);
@@ -60,14 +25,63 @@ public:
         }
 
         QByteArray data;
-        writeByte(0x00); // packet ID
-        writeVarInt(0x760); // protocol version
-        writeByte(domain.size()); // server address length
-        writeString(domain.toStdString()); // server address
-        writeShort(port); // server port
-        writeVarInt(1); // next state
+        writeVarInt(data, 0x00); // packet ID
+        writeVarInt(data, 0x760); // protocol version
+        writeVarInt(data, domain.size()); // server address length
+        writeString(data, domain.toStdString()); // server address
+        writeFixedInt(data, port, 2); // server port
+        writeVarInt(data, 0x01); // next state
+        writePacketToSocket(data); // send handshake packet
 
-        writeToSocket();
+        data.clear();
+
+        writeVarInt(data, 0x00); // packet ID
+        writePacketToSocket(data); // send status packet
+
+        if (!socket.waitForReadyRead(3000)) {
+            printf("Socket didn't send anything to read\n");
+            return;
+        }
+
+        auto resp = socket.readAll();
+        printf("RESP SIZE=%d\n", resp.size());
     }
 
+private:
+    // From https://wiki.vg/Server_List_Ping
+    void writeVarInt(QByteArray &data, int value) {
+        while (true) {
+            if ((value & ~SEGMENT_BITS) == 0) {
+                data.append(value);
+                return;
+            }
+
+            data.append((value & SEGMENT_BITS) | CONTINUE_BIT);
+
+            // Note: >>> means that the sign bit is shifted with the rest of the number rather than being left alone
+            value >>= 7;
+        }
+    }
+
+    // write number with specified size
+    void writeFixedInt(QByteArray &data, int value, int size) {
+        for (int i = 0; i < size; i++) {
+            data.append((value >> (i * 8)) & 0xFF);
+        }
+    }
+
+    void writeString(QByteArray &data, std::string value) {
+        data.append(value);
+    }
+
+    void writePacketToSocket(QByteArray &data) {
+        // we prefix the packet with its length
+        QByteArray dataWithSize;
+        writeVarInt(dataWithSize, data.size());
+        dataWithSize.append(data);
+
+        // write it to the socket
+        socket.write(data);
+        socket.flush();
+    }
 };

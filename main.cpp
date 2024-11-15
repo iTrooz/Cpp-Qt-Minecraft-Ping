@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
     QObject::connect(&resolver, &MCResolver::succeed, [&](QString ip, int port) {
         qDebug() << "Resolved Addresse for" << domain << ": " << ip << ":" << port;
         McClient client(nullptr, QString::fromStdString(domain), ip, port);
+        client.getOnlinePlayers();
     });
     resolver.ping();
 
