@@ -6,7 +6,8 @@
 #include <QtNetwork/QDnsLookup>
 #include <QCoreApplication>
 
-#include <minecraft_ping.hpp>
+#include <mc_resolver.hpp>
+#include <mc_client.hpp>
 
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);
@@ -18,14 +19,11 @@ int main(int argc, char *argv[]) {
     std::string domain = argv[1];
     int port = std::stoi(argv[2]);
 
-    MinecraftPing ping(nullptr, domain, port);
-    QObject::connect(&ping, &MinecraftPing::succeed, [&](){
-        std::cout << "OK !" << std::endl;
+    MCResolver resolver(nullptr, domain, port);
+    QObject::connect(&resolver, &MCResolver::succeed, [&](QString ip, int port) {
+        McClient client(nullptr, QString::fromStdString(domain), ip, port);
     });
-    QObject::connect(&ping, &MinecraftPing::fail, [&](){
-        std::cout << "Fail !" << std::endl;
-    });
-    ping.ping();
+    resolver.ping();
 
     return app.exec();
 }

@@ -5,14 +5,15 @@
 #include <QApplication>
 #include <QHostInfo>
 
-class MinecraftPing : public QObject {
+// resolve the IP and port of a Minecraft server
+class MCResolver : public QObject {
     Q_OBJECT
 
     std::string constrDomain;
     int constrPort;
 
 public:
-    explicit MinecraftPing(QObject *parent, std::string domain, int port): QObject(parent), constrDomain(domain), constrPort(port) {}
+    explicit MCResolver(QObject *parent, std::string domain, int port): QObject(parent), constrDomain(domain), constrPort(port) {}
 
     void ping() {
         pingWithDomainSRV(QString::fromStdString(constrDomain), constrPort);
@@ -68,17 +69,9 @@ private:
                 
                 
                 const auto& firstRecord = records.at(0);
-                pingWithIP(firstRecord.toString(), port);
+                emitSucceed(firstRecord.toString(), port);
             }
         });        
-    }
-
-    void pingWithIP(QString ip, int port) {
-        printf("Found IP %s, port %d\n", ip.toStdString().c_str(), port);
-
-        // TODO
-        
-        emitSucceed();
     }
 
     void emitFail(std::string error) {
@@ -86,11 +79,11 @@ private:
         emit fail();
     }
 
-    void emitSucceed() {
-        emit succeed();
+    void emitSucceed(QString ip, int port) {
+        emit succeed(ip, port);
     }
 
 signals:
-    void succeed();
+    void succeed(QString ip, int port);
     void fail();
 };
