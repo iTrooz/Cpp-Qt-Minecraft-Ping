@@ -42,7 +42,7 @@ public:
     void sendRequest() {
         QByteArray data;
         writeVarInt(data, 0x00); // packet ID
-        writeVarInt(data, 0x760); // protocol version
+        writeVarInt(data, 763); // hardcoded protocol version (763 = 1.20.1)
         writeVarInt(data, domain.size()); // server address length
         writeString(data, domain.toStdString()); // server address
         writeFixedInt(data, port, 2); // server port
